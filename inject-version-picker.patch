@@ -1,9 +1,9 @@
 diff --git a/_static/version_redirect.js b/_static/version_redirect.js
 new file mode 100644
-index 0000000..aa5b4c9
+index 0000000..c6c0343
 --- /dev/null
 +++ b/_static/version_redirect.js
-@@ -0,0 +1,118 @@
+@@ -0,0 +1,122 @@
 +var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
 +
 +$.ajaxSetup({beforeSend: function (xhr) {
@@ -57,18 +57,22 @@ index 0000000..aa5b4c9
 +    return path;
 +}
 +
-+function redirectToPath(newPath) {
++function redirectToPath(newPath, keepHistory) {
 +    const fragment = window.location.href.indexOf('#');
 +    if (fragment != -1) {
 +        newPath += window.location.href.slice(fragment);
 +    }
 +
 +    if (newPath && newPath != window.location.pathname) {
-+        window.location.replace(newPath);
++        if (keepHistory) {
++            window.location.assign(newPath);
++        } else {
++            window.location.replace(newPath);
++        }
 +    }
 +}
 +
-+function redirectToVersion(target, available) {
++function redirectToVersion(target, available, keepHistory) {
 +    const tail = stripVersionPath(window.location.pathname, available + [target]);
 +
 +    var newPath = '';
@@ -78,7 +82,7 @@ index 0000000..aa5b4c9
 +    if (tail) {
 +        newPath += tail;
 +    }
-+    redirectToPath(newPath);
++    redirectToPath(newPath, keepHistory);
 +}
 +
 +function setVersionPickerOptions() {
@@ -105,7 +109,7 @@ index 0000000..aa5b4c9
 +function pickVersion() {
 +    getVersions.then(function (available) {
 +        const targetVersion = document.getElementById('version-picker').value;
-+        redirectToVersion(targetVersion, available);
++        redirectToVersion(targetVersion, available, true);
 +    });
 +}
 +
@@ -117,7 +121,7 @@ index 0000000..aa5b4c9
 +if (versionParam) {
 +    getVersions.then(function (available) {
 +        const useVersion = findBestVersion(versionParam, available);
-+        redirectToVersion(useVersion, available);
++        redirectToVersion(useVersion, available, false);
 +    });
 +}
 +
