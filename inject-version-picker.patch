@@ -1,0 +1,140 @@
+diff --git a/_static/version_redirect.js b/_static/version_redirect.js
+new file mode 100644
+index 0000000..aa5b4c9
+--- /dev/null
++++ b/_static/version_redirect.js
+@@ -0,0 +1,118 @@
++var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
++
++$.ajaxSetup({beforeSend: function (xhr) {
++    if (xhr.overrideMimeType) {
++        xhr.overrideMimeType("application/json");
++    }
++}});
++
++const VERSIONS_LIST = "/versions.json";
++
++const getVersions = $.getJSON(VERSIONS_LIST).then(function (data) {
++    // Start with highest version number, using natural sorting
++    data.entries.sort(collator.compare).reverse();
++    return data.entries;
++});
++
++function findBestVersion(version, available) {
++    var bestVersion = '';
++    available.some(function (candidate) {
++        if (version.startsWith(candidate)) {
++            // Direct prefix match
++            bestVersion = candidate;
++            return true;
++        }
++        if (collator.compare(candidate, version) < 0) {
++            // Available version is numerically lower than requested
++            if (version.startsWith(candidate.slice(0, candidate.lastIndexOf('.')))) {
++                // Use the lower version if it only differs in last component
++                bestVersion = candidate;
++            }
++            // Stop checking even older versions
++            return true;
++        }
++        bestVersion = candidate;
++        return false;
++    });
++    // Filter out any higher versions which differ in more than the last component
++    if (!version.startsWith(bestVersion.slice(0, bestVersion.lastIndexOf('.')))) {
++        bestVersion = '';
++    }
++    return bestVersion;
++}
++
++function stripVersionPath(path, versions) {
++    var slash = path.indexOf('/', 1);
++    if (slash != -1) {
++        if (versions.indexOf(path.slice(1, slash)) != -1) {
++            path = path.slice(slash);
++        }
++    }
++    return path;
++}
++
++function redirectToPath(newPath) {
++    const fragment = window.location.href.indexOf('#');
++    if (fragment != -1) {
++        newPath += window.location.href.slice(fragment);
++    }
++
++    if (newPath && newPath != window.location.pathname) {
++        window.location.replace(newPath);
++    }
++}
++
++function redirectToVersion(target, available) {
++    const tail = stripVersionPath(window.location.pathname, available + [target]);
++
++    var newPath = '';
++    if (target) {
++        newPath += '/' + target;
++    }
++    if (tail) {
++        newPath += tail;
++    }
++    redirectToPath(newPath);
++}
++
++function setVersionPickerOptions() {
++    getVersions.then(function (available) {
++        var items = [
++            '<option value="">latest</option>'
++        ];
++        $.each(available, function (key, val) {
++            items.push('<option value="' + val + '">' + val + '</option>');
++        });
++        let sel = document.createElement('select');
++        sel.setAttribute('id', 'version-picker');
++        sel.onchange = pickVersion;
++        sel.innerHTML = items.join('');
++        let note = document.createElement('div');
++        note.classList.add('admonition', 'note');
++        note.append('Browsing documentation for version: ');
++        note.append(sel);
++        var doc = document.getElementsByClassName('document')[0];
++        doc.prepend(note);
++    });
++}
++
++function pickVersion() {
++    getVersions.then(function (available) {
++        const targetVersion = document.getElementById('version-picker').value;
++        redirectToVersion(targetVersion, available);
++    });
++}
++
++
++const urlParams = new URLSearchParams(window.location.search);
++const versionParam = urlParams.get('version');
++
++
++if (versionParam) {
++    getVersions.then(function (available) {
++        const useVersion = findBestVersion(versionParam, available);
++        redirectToVersion(useVersion, available);
++    });
++}
++
++window.addEventListener('DOMContentLoaded', setVersionPickerOptions);
+diff --git a/conf.py b/conf.py
+index 1eef9b2..204e00f 100644
+--- a/conf.py
++++ b/conf.py
+@@ -209,6 +209,11 @@ html_show_copyright = False
+ # This is the file name suffix for HTML files (e.g. ".xhtml").
+ #html_file_suffix = None
+ 
++# Include JavaScript files with custom functionality
++html_js_files = [
++    'version_redirect.js',
++]
++
+ # Output file base name for HTML help builder.
+ htmlhelp_basename = 'Syncthingdoc'
+ 
