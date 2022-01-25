@@ -1,9 +1,9 @@
 diff --git a/_static/version_redirect.js b/_static/version_redirect.js
 new file mode 100644
-index 0000000..c6c0343
+index 0000000..34724d5
 --- /dev/null
 +++ b/_static/version_redirect.js
-@@ -0,0 +1,122 @@
+@@ -0,0 +1,123 @@
 +var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
 +
 +$.ajaxSetup({beforeSend: function (xhr) {
@@ -95,6 +95,7 @@ index 0000000..c6c0343
 +        });
 +        let sel = document.createElement('select');
 +        sel.setAttribute('id', 'version-picker');
++        sel.setAttribute('style', 'font: inherit;');
 +        sel.onchange = pickVersion;
 +        sel.innerHTML = items.join('');
 +        let note = document.createElement('div');
