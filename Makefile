@@ -1,11 +1,15 @@
-SOURCE_DIR = ~/src/syncthing-docs/
+SOURCE_DIR = ~/src/syncthing-docs
 TARGET_DIR := $(CURDIR)
 VERSIONS = $(wildcard v*.*.*)
+JS_FILES = $(patsubst %,%/_static/version_redirect.js,$(VERSIONS))
 
 
 all: $(VERSIONS)
 
-.PHONY: all
+copy-js: $(JS_FILES)
+	git add --no-all .
+
+.PHONY: all copy-js
 
 
 $(VERSIONS): %: $(TARGET_DIR)/inject-version-picker.patch FORCE
@@ -18,5 +22,8 @@ $(VERSIONS): %: $(TARGET_DIR)/inject-version-picker.patch FORCE
         mv -v _build/man/ $(TARGET_DIR)/$@/ && \
 	cd $(TARGET_DIR) && \
 	git add --no-all $@
+
+$(JS_FILES): %/_static/version_redirect.js: FORCE
+	cp $(SOURCE_DIR)/_static/version_redirect.js $(TARGET_DIR)/$@
 
 FORCE:
