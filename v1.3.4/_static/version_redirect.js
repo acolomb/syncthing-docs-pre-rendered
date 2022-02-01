@@ -85,9 +85,8 @@ function redirectToVersion(target, available, keepHistory) {
 
 function setVersionPickerOptions() {
     getVersions.then(function (available) {
-        var opt = document.createElement('option');
-        opt.setAttribute('value', 'latest');
         var items = [
+            '<option value="">latest</option>'
         ];
         var current = splitVersionPath(window.location.pathname, available)[0];
         $.each(available, function (key, val) {
